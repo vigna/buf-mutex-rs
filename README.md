@@ -10,14 +10,11 @@
 Sometimes, multiple threads need to update a shared value so frequently that the
 overhead of an [atomic] or a [`Mutex`] becomes a bottleneck. If, however, only
 the cumulative result of the update is important, and not any of the
-intermediate values, a [`BufMutex`] will wrap the global value in a [`Mutex`]
-and provide a public local value that can be modified at will. Cloning a
-[`BufMutex`] provides a new local value and a references to the original global
-value; when the [`BufMutex`] is dropped, the local value is combined with the
-global value using a provided reduction function. Thus, clones can be provided
-to multiple threads, and upon completion all accumulated local values will be
-combined into the global value. This pattern works particular well with methods
- such as like [`rayon`]'s [`for_each_with`], [`map_with`], and so on.
+intermediate values, a [`BufMutex`] makes it possible to pass around multiple
+cloneable [`SharedBufMutex`]s containing a local value that can be updated
+without synchronization, and that will be combined into the global value when
+the [`SharedBufMutex`]s are dropped. This pattern works particular well with
+methods such as like [`rayon`]'s [`for_each_with`], [`map_with`], and so on.
 
 ## Acknowledgments
 
