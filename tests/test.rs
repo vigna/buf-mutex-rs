@@ -1,8 +1,8 @@
-use buffered_atomic::BufferedAtomic;
+use buf_mutex::BufMutex;
 
 #[test]
 fn test() {
-    let buffered_atomic = BufferedAtomic::new(3, |old, new| old + new);
+    let buffered_atomic = BufMutex::new(3, |old, new| old + new);
     {
         let mut clone1 = buffered_atomic.clone();
         let mut clone2 = buffered_atomic.clone();

@@ -1,7 +1,13 @@
 [package]
-name = "buffered-atomic"
+name = "buf-mutex"
 version = "0.1.0"
 edition = "2021"
+description = "Buffered mutexes"
+repository = "https://github.com/vigna/buf-mutex-rs/"
+license = "Apache-2.0 OR LGPL-2.1-or-later"
+keywords = ["mutex", "buffer", "concurrency"]
+categories = ["concurrency"]
+authors = ["Sebastiano Vigna <sebastiano.vigna@unimi.it>"]
 
-[dependencies]
-common_traits = "0.11.2"
+[dev-dependencies]
+rayon = "1.10.0"
