@@ -67,7 +67,6 @@ use std::sync::{Arc, Mutex};
 /// might perform excessive cloning if jobs are too short, you can use
 /// [`with_min_len`](https://docs.rs/rayon/latest/rayon/iter/trait.ParallelIterator.html#method.with_min_len)
 /// to reduce the amount of cloning.
-
 pub struct BufMutex<T: Clone + Debug + Default> {
     global: Arc<Mutex<T>>,
     reduce: fn(T, T) -> T,

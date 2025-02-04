@@ -28,5 +28,6 @@ MUR can be held responsible for them.
 [`map_with`]: <https://docs.rs/rayon/latest/rayon/iter/trait.ParallelIterator.html#method.map_with>
 [`Mutex`]: <https://doc.rust-lang.org/std/sync/struct.Mutex.html>
 [`BufMutex`]: <https://docs.rs/buf-mutex/latest/buf_mutex/struct.BufMutex.html>
+[`SharedBufMutex`]: <https://docs.rs/buf-mutex/latest/buf_mutex/struct.SharedBufMutex.html>
 [atomic]: <https://doc.rust-lang.org/std/sync/atomic/>
 [`rayon`]: <https://docs.rs/rayon/latest/rayon/>
