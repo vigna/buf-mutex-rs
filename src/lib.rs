@@ -7,6 +7,7 @@
 #![doc = include_str!("../README.md")]
 
 use std::fmt::Debug;
+use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
 /// Wrap a global value into a [`Arc`]/[`Mutex`], providing [shareable,
@@ -61,6 +62,20 @@ use std::sync::{Arc, Mutex};
 /// assert_eq!(counter.get(), 1_000_005);
 /// ```
 ///
+/// Each [`SharedBufMutex`] has a reference to the [`BufMutex`] it was created
+/// from, so you can't move the [`BufMutex`] while there are still shared copies.
+///
+/// This will not compile:
+/// ```compile_fail
+/// use buf_mutex::BufMutex;
+/// use rayon::prelude::*;
+///
+/// let buffered_atomic = BufMutex::new(3, |global, local| *global += *local);
+/// let mut _shared = buffered_atomic.share();
+/// // drop(_shared); // uncommenting this would make the code compile
+/// assert_eq!(buffered_atomic.get(), 3);
+///```
+///
 /// Note that you have to pass `counter.clone()` to avoid a move that would make
 /// the call to [`get`](BufMutex::get) impossible. Also, since
 /// [`for_each_with`](https://docs.rs/rayon/latest/rayon/iter/trait.ParallelIterator.html#method.for_each_with)
@@ -70,7 +85,7 @@ use std::sync::{Arc, Mutex};
 #[derive(Debug)]
 pub struct BufMutex<T: Debug + Default> {
     global: Arc<Mutex<T>>,
-    reduce: fn(&mut T, &mut T),
+    reduce: fn(&mut T, T),
 }
 
 impl<T: Debug + Default> BufMutex<T> {
@@ -78,7 +93,7 @@ impl<T: Debug + Default> BufMutex<T> {
     ///
     /// The function must reduce the local value (second argument) into the
     /// global value (first argument).
-    pub fn new(init: T, reduce: fn(global: &mut T, local: &mut T)) -> Self {
+    pub fn new(init: T, reduce: fn(global: &mut T, local: T)) -> Self {
         BufMutex {
             global: Arc::new(Mutex::new(init)),
             reduce,
@@ -86,13 +101,14 @@ impl<T: Debug + Default> BufMutex<T> {
     }
 
     /// Create a new shared, cloneable copy of the buffered mutex.
-    pub fn share(&self) -> SharedBufMutex<T> {
+    pub fn share(&self) -> SharedBufMutex<'_, T> {
         SharedBufMutex {
             buf_mutex: BufMutex {
                 global: self.global.clone(),
                 reduce: self.reduce,
             },
             local: T::default(),
+            _marker: PhantomData,
         }
     }
 
@@ -138,12 +154,15 @@ impl<T: Clone + Debug + Default> BufMutex<T> {
 /// When a [`SharedBufMutex`] is dropped, the local value will be reduced into
 /// the global value.
 #[derive(Debug)]
-pub struct SharedBufMutex<T: Debug + Default> {
+pub struct SharedBufMutex<'a, T: Debug + Default> {
     buf_mutex: BufMutex<T>,
     local: T,
+    /// This lifetime is only used to ensure that the BufMutex is not
+    /// accessed or dropped before all SharedBufMutex instances are dropped.
+    _marker: PhantomData<&'a T>,
 }
 
-impl<T: Debug + Default> SharedBufMutex<T> {
+impl<T: Debug + Default> SharedBufMutex<'_, T> {
     /// Return the current number shared copies.
     ///
     /// This method delegates to [`BufMutex::count`].
@@ -152,7 +171,7 @@ impl<T: Debug + Default> SharedBufMutex<T> {
     }
 }
 
-impl<T: Debug + Default> Clone for SharedBufMutex<T> {
+impl<T: Debug + Default> Clone for SharedBufMutex<'_, T> {
     /// Return a copy sharing the same global value and
     /// with local value initialized to the default value.
     fn clone(&self) -> Self {
@@ -162,19 +181,21 @@ impl<T: Debug + Default> Clone for SharedBufMutex<T> {
                 reduce: self.buf_mutex.reduce,
             },
             local: T::default(),
+            _marker: PhantomData,
         }
     }
 }
 
-impl<T: Debug + Default> Drop for SharedBufMutex<T> {
+impl<T: Debug + Default> Drop for SharedBufMutex<'_, T> {
     /// Reduce the local value into the global value.
     fn drop(&mut self) {
         let mut lock = self.buf_mutex.global.lock().unwrap();
-        (self.buf_mutex.reduce)(&mut *lock, &mut self.local);
+        let local = std::mem::take(&mut self.local);
+        (self.buf_mutex.reduce)(&mut *lock, local);
     }
 }
 
-impl<T: Clone + Debug + Default> SharedBufMutex<T> {
+impl<T: Clone + Debug + Default> SharedBufMutex<'_, T> {
     /// Return the current global value.
     ///
     /// This method delegates to [`BufMutex::peek`].
@@ -183,14 +204,14 @@ impl<T: Clone + Debug + Default> SharedBufMutex<T> {
     }
 }
 
-impl<T: Debug + Default> AsRef<T> for SharedBufMutex<T> {
+impl<T: Debug + Default> AsRef<T> for SharedBufMutex<'_, T> {
     /// Return a reference to the local value.
     fn as_ref(&self) -> &T {
         &self.local
     }
 }
 
-impl<T: Debug + Default> AsMut<T> for SharedBufMutex<T> {
+impl<T: Debug + Default> AsMut<T> for SharedBufMutex<'_, T> {
     /// Return a mutable reference to the local value.
     fn as_mut(&mut self) -> &mut T {
         &mut self.local
