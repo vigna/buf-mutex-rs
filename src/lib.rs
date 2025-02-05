@@ -74,8 +74,8 @@ use std::sync::Mutex;
 /// assert_eq!(counter.get(), 1_000_005);
 /// ```
 ///
-/// Note that you have to pass `counter.clone()` to avoid a move that would make
-/// the call to [`get`](BufMutex::get) impossible. Also, since
+/// Note that you have to pass `counter.share()`, which can be cloned. Also,
+/// since
 /// [`for_each_with`](https://docs.rs/rayon/latest/rayon/iter/trait.ParallelIterator.html#method.for_each_with)
 /// might perform excessive cloning if jobs are too short, you can use
 /// [`with_min_len`](https://docs.rs/rayon/latest/rayon/iter/trait.ParallelIterator.html#method.with_min_len)
