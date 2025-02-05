@@ -1,6 +1,6 @@
 [package]
 name = "buf-mutex"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Buffered mutexes"
 repository = "https://github.com/vigna/buf-mutex-rs/"
