@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.2.1] - 2025-02-05
+
+### Fixed
+
+* Fixed API docs.
+
 ## [0.2.0] - 2025-02-05
 
 ### Improved

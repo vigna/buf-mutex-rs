@@ -108,10 +108,15 @@ impl<T: Debug + Default> BufMutex<T> {
 
     /// Consume self and return the global value.
     ///
+    /// Note that you cannot call this method if there are still [shared
+    /// copies](#method.share) that have not been dropped.
+    ///
+    /// If you just need to access the global value without consuming self, and
+    /// the base type is [`Clone`], use [`peek`](BufMutex::peek).
+    ///
     /// # Panics
     ///
-    /// This method will panic if not all shared copies have been dropped, or if
-    /// the mutex is poisoned. If you need just to observe the global value, use
+    /// This method will panic if the mutex is poisoned.
     /// [`peek`](BufMutex::peek).
     pub fn get(self) -> T {
         self.global.into_inner().unwrap()
@@ -123,6 +128,10 @@ impl<T: Clone + Debug + Default> BufMutex<T> {
     ///
     /// Note that this method does not guarantee that all shared copies have
     /// been dropped. If you need that guarantee, use [`get`](BufMutex::get).
+    ///
+    /// # Panics
+    ///
+    /// This method will panic if the mutex is poisoned.
     pub fn peek(&self) -> T {
         self.global.lock().unwrap().clone()
     }
