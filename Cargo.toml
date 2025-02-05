@@ -7,7 +7,10 @@ repository = "https://github.com/vigna/buf-mutex-rs/"
 license = "Apache-2.0 OR LGPL-2.1-or-later"
 keywords = ["mutex", "buffer", "concurrency"]
 categories = ["concurrency"]
-authors = ["Sebastiano Vigna <sebastiano.vigna@unimi.it>"]
+authors = [
+	"Tommaso Fontana <tommaso.fontana.96@gmail.com>",
+	"Sebastiano Vigna <sebastiano.vigna@unimi.it>",
+]
 
 [dev-dependencies]
 rayon = "1.10.0"
