@@ -33,23 +33,13 @@ fn test_get() {
 }
 
 #[test]
-#[should_panic]
-fn test_missing_drop() {
-    let buffered_atomic = BufMutex::new(3, |global, local| *global += *local);
-    let mut _shared = buffered_atomic.share();
-    assert_eq!(buffered_atomic.get(), 3);
-}
-
-#[test]
 fn test_peek_count() {
     let buffered_atomic = BufMutex::new(3, |global, local| *global += *local);
     {
         let mut shared = buffered_atomic.share();
         *shared.as_mut() = 5;
         assert_eq!(buffered_atomic.peek(), 3);
-        assert_eq!(buffered_atomic.count(), 1);
         assert_eq!(shared.peek(), 3);
-        assert_eq!(shared.count(), 1);
     }
     assert_eq!(buffered_atomic.peek(), 8);
 }
