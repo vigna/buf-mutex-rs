@@ -8,15 +8,27 @@
 #![doc = include_str!("../README.md")]
 
 use std::fmt::Debug;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
-/// Wrap a global value into a [`Arc`]/[`Mutex`], providing [shareable,
-/// cloneable copies with a local value](#method.share); the copies will be
-/// reduced into the global value when dropped.
+/// Wrap a global value into a [`Mutex`], providing [shareable, cloneable copies
+/// with a local value](#method.share); the copies will be reduced into the
+/// global value when dropped.
 ///
-/// The global value can be observed with [`peek`](BufMutex::peek), whereas
-/// [`get`](BufMutex::get) consumes self and panics if not all copies have been
-/// dropped.
+/// The global value can be observed with [`peek`](BufMutex::peek) if the base
+/// time is [`Clone`], whereas [`get`](BufMutex::get) consumes self and returns
+/// the global value.
+///
+/// Each shared copy has a reference to the [`BufMutex`] it was created from, so
+/// you cannot call [`get`](BufMutex::get) if there are still shared copies
+/// around. For example, this code will not compile:
+/// ```compile_fail
+/// use buf_mutex::BufMutex;
+///
+/// let buffered_atomic = BufMutex::new(3, |global, local| *global += *local);
+/// let mut _shared = buffered_atomic.share();
+/// // drop(_shared); // uncommenting this line would make the code compile
+/// assert_eq!(buffered_atomic.get(), 3);
+///```
 ///
 /// # Examples
 ///
@@ -71,7 +83,7 @@ use std::sync::{Arc, Mutex};
 #[derive(Debug)]
 pub struct BufMutex<T: Debug + Default> {
     global: Mutex<T>,
-    reduce: fn(&mut T, &mut T),
+    reduce: fn(&mut T, &T),
 }
 
 impl<T: Debug + Default> BufMutex<T> {
@@ -79,7 +91,7 @@ impl<T: Debug + Default> BufMutex<T> {
     ///
     /// The function must reduce the local value (second argument) into the
     /// global value (first argument).
-    pub fn new(init: T, reduce: fn(global: &mut T, local: &mut T)) -> Self {
+    pub fn new(init: T, reduce: fn(global: &mut T, local: &T)) -> Self {
         BufMutex {
             global: Mutex::new(init),
             reduce,
@@ -89,7 +101,7 @@ impl<T: Debug + Default> BufMutex<T> {
     /// Create a new shared, cloneable copy of the buffered mutex.
     pub fn share(&self) -> SharedBufMutex<T> {
         SharedBufMutex {
-            buf_mutex: &self,
+            buf_mutex: self,
             local: T::default(),
         }
     }
@@ -130,26 +142,26 @@ pub struct SharedBufMutex<'a, T: Debug + Default> {
     local: T,
 }
 
-impl<'a, T: Debug + Default> Clone for SharedBufMutex<'a, T> {
+impl<T: Debug + Default> Clone for SharedBufMutex<'_, T> {
     /// Return a copy sharing the same global value and
     /// with local value initialized to the default value.
     fn clone(&self) -> Self {
         SharedBufMutex {
-            buf_mutex: &self.buf_mutex,
+            buf_mutex: self.buf_mutex,
             local: T::default(),
         }
     }
 }
 
-impl<'a, T: Debug + Default> Drop for SharedBufMutex<'a, T> {
+impl<T: Debug + Default> Drop for SharedBufMutex<'_, T> {
     /// Reduce the local value into the global value.
     fn drop(&mut self) {
         let mut lock = self.buf_mutex.global.lock().unwrap();
-        (self.buf_mutex.reduce)(&mut *lock, &mut self.local);
+        (self.buf_mutex.reduce)(&mut *lock, &self.local);
     }
 }
 
-impl<'a, T: Clone + Debug + Default> SharedBufMutex<'a, T> {
+impl<T: Clone + Debug + Default> SharedBufMutex<'_, T> {
     /// Return the current global value.
     ///
     /// This method delegates to [`BufMutex::peek`].
@@ -158,14 +170,14 @@ impl<'a, T: Clone + Debug + Default> SharedBufMutex<'a, T> {
     }
 }
 
-impl<'a, T: Debug + Default> AsRef<T> for SharedBufMutex<'a, T> {
+impl<T: Debug + Default> AsRef<T> for SharedBufMutex<'_, T> {
     /// Return a reference to the local value.
     fn as_ref(&self) -> &T {
         &self.local
     }
 }
 
-impl<'a, T: Debug + Default> AsMut<T> for SharedBufMutex<'a, T> {
+impl<T: Debug + Default> AsMut<T> for SharedBufMutex<'_, T> {
     /// Return a mutable reference to the local value.
     fn as_mut(&mut self) -> &mut T {
         &mut self.local
