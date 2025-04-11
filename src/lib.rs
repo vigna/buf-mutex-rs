@@ -15,7 +15,7 @@ use std::sync::Mutex;
 /// global value when dropped.
 ///
 /// The global value can be observed with [`peek`](BufMutex::peek) if the base
-/// time is [`Clone`], whereas [`get`](BufMutex::get) consumes self and returns
+/// type is [`Clone`], whereas [`get`](BufMutex::get) consumes self and returns
 /// the global value.
 ///
 /// Each shared copy has a reference to the [`BufMutex`] it was created from, so
@@ -52,7 +52,7 @@ use std::sync::Mutex;
 /// assert_eq!(counter.get(), 35);
 /// ```
 ///
-/// You can obtain the same behavior with [`rayon`](https://docs.rs/rayon) using
+/// You can obtain the same behavior with [Rayon](https://docs.rs/rayon) using
 /// methods such as
 /// [`for_each_with`](https://docs.rs/rayon/latest/rayon/iter/trait.ParallelIterator.html#method.for_each_with)
 /// and

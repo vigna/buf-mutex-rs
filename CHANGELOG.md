@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.2.2] - 2025-04-11
+
+### Changed
+
+* Added references to OpenMP and Cilk.
+
 ## [0.2.1] - 2025-02-05
 
 ### Fixed

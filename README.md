@@ -1,4 +1,4 @@
-# Buffered Mutexes
+# Buffered Mutexes Implementing the Reducer Parallel–Programming Pattern
 
 [![downloads](https://img.shields.io/crates/d/buf-mutex)](https://crates.io/crates/buf-mutex)
 [![dependents](https://img.shields.io/librariesio/dependents/cargo/buf-mutex)](https://crates.io/crates/buf-mutex/reverse_dependencies)
@@ -14,7 +14,13 @@ intermediate values, a [`BufMutex`] makes it possible to pass around multiple
 cloneable [`SharedBufMutex`]s containing a local value that can be updated
 without synchronization, and that will be combined into the global value when
 the [`SharedBufMutex`]s are dropped. This pattern works particular well with
-methods such as like [`rayon`]'s [`for_each_with`], [`map_with`], and so on.
+methods such as like [Rayon]'s [`for_each_with`], [`map_with`], and so on.
+
+Structures of this type are called *reducers* in [OpenMP] and *reducer
+hyperobjects* in [Cilk]; they fuel the inner workings of [Rayon]. However,
+[Rayon] does not expose them—you access them through a functional (or *pull*)
+interface (e.g., via the [`fold`] method). If you need an imperative (or *push*)
+interface (e.g., direct mutation methods) you can use a [`BufMutex`].
 
 ## Acknowledgments
 
@@ -30,4 +36,7 @@ MUR can be held responsible for them.
 [`BufMutex`]: <https://docs.rs/buf-mutex/latest/buf_mutex/struct.BufMutex.html>
 [`SharedBufMutex`]: <https://docs.rs/buf-mutex/latest/buf_mutex/struct.SharedBufMutex.html>
 [atomic]: <https://doc.rust-lang.org/std/sync/atomic/>
-[`rayon`]: <https://docs.rs/rayon/latest/rayon/>
+[Rayon]: <https://docs.rs/rayon/latest/rayon/>
+[Cilk]: <https://www.opencilk.org/>
+[`fold`]: <https://docs.rs/rayon/1.10.0/rayon/iter/trait.ParallelIterator.html#method.fold>
+[OpenMp]: <https://www.openmp.org/>

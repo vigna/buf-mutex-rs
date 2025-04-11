@@ -1,11 +1,11 @@
 [package]
 name = "buf-mutex"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
-description = "Buffered mutexes"
+description = "Buffered mutexes implementing the reducer parallel-programming pattern"
 repository = "https://github.com/vigna/buf-mutex-rs/"
 license = "Apache-2.0 OR LGPL-2.1-or-later"
-keywords = ["mutex", "buffer", "concurrency"]
+keywords = ["mutex", "buffer", "concurrency", "reducer"]
 categories = ["concurrency"]
 authors = [
 	"Tommaso Fontana <tommaso.fontana.96@gmail.com>",
