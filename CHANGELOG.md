@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.2.3] - 2025-04-15
+
+### New
+
+* Global and local values have different type parameters.
+
+### Changed
+
+* Renamed `openmp-reducer` (was `buf-mutex`).
+
 ## [0.2.2] - 2025-04-11
 
 ### Changed

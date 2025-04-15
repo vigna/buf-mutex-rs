@@ -5,41 +5,52 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
-use buf_mutex::BufMutex;
+use openmp_reducer::Reducer;
 
 #[test]
 fn test() {
-    let buffered_atomic = BufMutex::new(3, |global, local| *global += *local);
+    let reducer = Reducer::new(3, |global, local| *global += *local);
     {
-        let mut shared0 = buffered_atomic.share();
+        let mut shared0 = reducer.share();
         let mut shared1 = shared0.clone();
 
         *shared0.as_mut() = 5;
         *shared1.as_mut() = 10;
     }
 
-    assert_eq!(buffered_atomic.get(), 18);
+    assert_eq!(reducer.get(), 18);
 }
 
 #[test]
 fn test_get() {
-    let buffered_atomic = BufMutex::new(3, |global, local| *global += *local);
+    let reducer = Reducer::new(3, |global, local| *global += *local);
     {
-        let mut shared = buffered_atomic.share();
+        let mut shared = reducer.share();
         *shared.as_mut() = 5;
         assert_eq!(*shared.as_ref(), 5);
     }
-    assert_eq!(buffered_atomic.get(), 8);
+    assert_eq!(reducer.get(), 8);
+}
+
+#[test]
+fn test_two_types() {
+    let reducer = Reducer::new(3, |global, local| *global += *local);
+    {
+        let mut shared = reducer.share();
+        *shared.as_mut() = 5;
+        assert_eq!(*shared.as_ref(), 5);
+    }
+    assert_eq!(reducer.get(), 8);
 }
 
 #[test]
 fn test_peek_count() {
-    let buffered_atomic = BufMutex::new(3, |global, local| *global += *local);
+    let reducer = Reducer::new(3, |global, local| *global += *local);
     {
-        let mut shared = buffered_atomic.share();
+        let mut shared = reducer.share();
         *shared.as_mut() = 5;
-        assert_eq!(buffered_atomic.peek(), 3);
+        assert_eq!(reducer.peek(), 3);
         assert_eq!(shared.peek(), 3);
     }
-    assert_eq!(buffered_atomic.peek(), 8);
+    assert_eq!(reducer.peek(), 8);
 }

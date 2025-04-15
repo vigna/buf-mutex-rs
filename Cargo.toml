@@ -1,11 +1,11 @@
 [package]
-name = "buf-mutex"
-version = "0.2.2"
+name = "openmp-reducer"
+version = "0.2.3"
 edition = "2021"
-description = "Buffered mutexes implementing the reducer parallel-programming pattern"
-repository = "https://github.com/vigna/buf-mutex-rs/"
+description = "OpenMP-style reducers"
+repository = "https://github.com/vigna/openmp-reducer-rs/"
 license = "Apache-2.0 OR LGPL-2.1-or-later"
-keywords = ["mutex", "buffer", "concurrency", "reducer"]
+keywords = ["reducer", "concurrency"]
 categories = ["concurrency"]
 authors = [
 	"Tommaso Fontana <tommaso.fontana.96@gmail.com>",
